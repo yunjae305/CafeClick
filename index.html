@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>☕ 카페 클리커</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #faf7f2;
+      --bg2:       #f0ebe2;
+      --bg3:       #e6dfd3;
+      --surface:   #ffffff;
+      --border:    rgba(120,90,60,0.15);
+      --border2:   rgba(120,90,60,0.30);
+      --text:      #2c1f0e;
+      --text2:     #7a6352;
+      --text3:     #b0a090;
+      --accent:    #a0522d;
+      --accent-bg: #f5e8df;
+      --accent-txt:#7a3319;
+      --green-bg:  #e8f5e9;
+      --green-txt: #2e7d32;
+      --info-bg:   #e3f2fd;
+      --info-txt:  #1565c0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { font-size: 18px; font-weight: 500; color: var(--accent); }
+    header span { font-size: 22px; }
+
+    main {
+      width: 100%;
+      max-width: 720px;
+      padding: 24px 16px;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* ── Left panel ── */
+    .left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .stats-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .stat-card .label { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+    .stat-card .value { font-size: 16px; font-weight: 500; color: var(--text); }
+
+    .milestone { font-size: 13px; color: var(--text2); }
+
+    .btn-wrap {
+      position: relative;
+      width: 170px;
+      height: 170px;
+    }
+    #brew-btn {
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 0.5px solid var(--border2);
+      font-size: 72px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.08s, box-shadow 0.08s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      box-shadow: 0 2px 12px rgba(120,90,60,0.08);
+    }
+    #brew-btn:active { transform: scale(0.91); box-shadow: none; }
+
+    .particle {
+      position: absolute;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+      pointer-events: none;
+      animation: floatUp 0.85s ease-out forwards;
+      white-space: nowrap;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0);    opacity: 1; }
+      100% { transform: translateY(-56px); opacity: 0; }
+    }
+
+    .cpc-label { font-size: 12px; color: var(--text2); }
+
+    .toast {
+      background: var(--green-bg);
+      color: var(--green-txt);
+      border: 0.5px solid rgba(46,125,50,0.25);
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      animation: toastIn 0.2s ease-out;
+    }
+    @keyframes toastIn {
+      from { transform: translateY(6px); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+    .toast-placeholder { height: 30px; }
+
+    /* ── Right panel ── */
+    .right {
+      width: 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .shop-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 4px;
+      padding-left: 2px;
+    }
+
+    .upg-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      transition: border-color 0.12s, opacity 0.12s;
+      outline: none;
+    }
+    .upg-btn:hover:not(:disabled) { border-color: var(--border2); }
+    .upg-btn:disabled { opacity: 0.42; cursor: default; }
+
+    .upg-icon { font-size: 18px; flex-shrink: 0; }
+    .upg-info { flex: 1; min-width: 0; }
+    .upg-row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+    .upg-name { font-size: 12px; font-weight: 500; color: var(--text); }
+    .upg-count {
+      font-size: 10px;
+      background: var(--info-bg);
+      color: var(--info-txt);
+      padding: 1px 6px;
+      border-radius: 99px;
+      flex-shrink: 0;
+    }
+    .upg-row2 { display: flex; justify-content: space-between; }
+    .upg-desc { font-size: 10px; color: var(--text2); }
+    .upg-cost { font-size: 10px; font-weight: 500; color: var(--text); }
+    .upg-cost.muted { color: var(--text3); }
+
+    /* ── Responsive ── */
+    @media (max-width: 520px) {
+      main { flex-direction: column; align-items: center; }
+      .right { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span>☕</span>
+  <h1>카페 클리커</h1>
+</header>
+
+<main>
+  <div class="left">
+    <div class="stats-row" id="stats"></div>
+    <div class="milestone" id="milestone">☕ 작은 카페</div>
+    <div class="btn-wrap" id="btn-wrap">
+      <button id="brew-btn">☕</button>
+    </div>
+    <div class="cpc-label" id="cpc-label">클릭당 1원</div>
+    <div id="toast-area"><div class="toast-placeholder"></div></div>
+  </div>
+
+  <div class="right">
+    <div class="shop-title">업그레이드</div>
+    <div id="shop"></div>
+  </div>
+</main>
+
+<script>
+const UPGRADES = [
+  { id:'beans',     name:'좋은 원두',      emoji:'🫘', desc:'클릭당 +1', costBase:15,    costMult:1.6, cpc:1,  cps:0   },
+  { id:'machine',   name:'에스프레소 머신', emoji:'⚙️', desc:'초당 +2',   costBase:50,    costMult:1.6, cpc:0,  cps:2   },
+  { id:'barista',   name:'바리스타 고용',   emoji:'👩‍🍳',desc:'초당 +10',  costBase:200,   costMult:1.6, cpc:0,  cps:10  },
+  { id:'deco',      name:'인테리어 개선',   emoji:'🪴', desc:'클릭당 +5', costBase:400,   costMult:1.6, cpc:5,  cps:0   },
+  { id:'delivery',  name:'배달 서비스',     emoji:'🛵', desc:'초당 +25',  costBase:1000,  costMult:1.6, cpc:0,  cps:25  },
+  { id:'branch',    name:'2호점 오픈',      emoji:'🏪', desc:'초당 +100', costBase:5000,  costMult:1.6, cpc:0,  cps:100 },
+  { id:'franchise', name:'프랜차이즈',      emoji:'🏢', desc:'초당 +500', costBase:25000, costMult:1.6, cpc:0,  cps:500 },
+  { id:'app',       name:'앱 출시',         emoji:'📱', desc:'클릭당 +50',costBase:10000, costMult:1.6, cpc:50, cps:0   },
+];
+
+const MILESTONES = [
+  [1000000,'🌍 글로벌 브랜드'],
+  [100000, '🏢 커피 제국'],
+  [10000,  '🏪 유명 카페'],
+  [1000,   '👩‍🍳 지역 명소'],
+  [100,    '🫘 단골이 생겼어'],
+  [0,      '☕ 작은 카페'],
+];
+
+// ── State ──────────────────────────────────────────────
+let coins = 0, total = 0, cups = 0;
+let owned = {};
+let pid = 0, toastTimer = null;
+
+function getCost(u) {
+  return Math.floor(u.costBase * Math.pow(u.costMult, owned[u.id] || 0));
+}
+function getCPC() {
+  return UPGRADES.reduce((s, u) => s + u.cpc * (owned[u.id] || 0), 1);
+}
+function getCPS() {
+  return UPGRADES.reduce((s, u) => s + u.cps * (owned[u.id] || 0), 0);
+}
+function fmt(n) {
+  n = Math.floor(n);
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toString();
+}
+function getMilestone() {
+  return MILESTONES.find(([t]) => total >= t)?.[1] ?? '☕ 작은 카페';
+}
+
+// ── Render ─────────────────────────────────────────────
+function renderStats() {
+  const cps = getCPS();
+  document.getElementById('stats').innerHTML = [
+    ['보유', fmt(coins) + '원'],
+    ['초당', fmt(cps) + '/s'],
+    ['판매', fmt(cups) + '잔'],
+  ].map(([l, v]) => `
+    <div class="stat-card">
+      <div class="label">${l}</div>
+      <div class="value">${v}</div>
+    </div>`).join('');
+}
+
+function renderShop() {
+  const shop = document.getElementById('shop');
+  shop.innerHTML = UPGRADES.map(u => {
+    const cost = getCost(u);
+    const count = owned[u.id] || 0;
+    const can = coins >= cost;
+    return `
+      <button class="upg-btn" ${can ? '' : 'disabled'} data-id="${u.id}">
+        <span class="upg-icon">${u.emoji}</span>
+        <div class="upg-info">
+          <div class="upg-row1">
+            <span class="upg-name">${u.name}</span>
+            ${count > 0 ? `<span class="upg-count">${count}</span>` : ''}
+          </div>
+          <div class="upg-row2">
+            <span class="upg-desc">${u.desc}</span>
+            <span class="upg-cost ${can ? '' : 'muted'}">${fmt(cost)}원</span>
+          </div>
+        </div>
+      </button>`;
+  }).join('');
+
+  shop.querySelectorAll('.upg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const u = UPGRADES.find(x => x.id === btn.dataset.id);
+      if (!u) return;
+      const cost = getCost(u);
+      if (coins < cost) return;
+      const isFirst = !owned[u.id];
+      coins -= cost;
+      owned[u.id] = (owned[u.id] || 0) + 1;
+      if (isFirst) showToast(`${u.emoji} ${u.name} 구매!`);
+      refreshAll();
+    });
+  });
+}
+
+function refreshAll() {
+  renderStats();
+  renderShop();
+  document.getElementById('milestone').textContent = getMilestone();
+  document.getElementById('cpc-label').textContent = `클릭당 ${getCPC()}원`;
+}
+
+// ── Toast ──────────────────────────────────────────────
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  const area = document.getElementById('toast-area');
+  area.innerHTML = `<div class="toast">${msg}</div>`;
+  toastTimer = setTimeout(() => {
+    area.innerHTML = '<div class="toast-placeholder"></div>';
+  }, 2200);
+}
+
+// ── Brew click ─────────────────────────────────────────
+document.getElementById('brew-btn').addEventListener('click', (e) => {
+  const cpc = getCPC();
+  coins += cpc;
+  total += cpc;
+  cups++;
+
+  const wrap = document.getElementById('btn-wrap');
+  const wr = wrap.getBoundingClientRect();
+  const x = e.clientX - wr.left;
+  const y = e.clientY - wr.top;
+  const el = document.createElement('div');
+  el.className = 'particle';
+  el.textContent = '+' + cpc;
+  el.style.left = (x - 16) + 'px';
+  el.style.top  = (y - 8)  + 'px';
+  wrap.appendChild(el);
+  const id = ++pid;
+  setTimeout(() => el.remove(), 850);
+
+  refreshAll();
+});
+
+// ── CPS tick ───────────────────────────────────────────
+setInterval(() => {
+  const cps = getCPS();
+  if (!cps) return;
+  coins += cps / 10;
+  total += cps / 10;
+  renderStats();
+}, 100);
+
+// ── Init ───────────────────────────────────────────────
+refreshAll();
+</script>
+</body>
+</html>
