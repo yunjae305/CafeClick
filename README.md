@@ -38,7 +38,8 @@
 ## 기술 스택
 
 - Vanilla HTML / CSS / JavaScript (외부 라이브러리 없음)
-- 정적 파일 단 1개로 구성 (`index.html`)
+- 브라우저에서 실행되는 게임 본체는 정적 파일 1개 (`index.html`)
+- Node.js 기반 회귀 테스트 스크립트 포함 (`tests/cafe-clicker.test.js`)
 
 ## 배포
 
@@ -60,11 +61,25 @@ open index.html   # macOS
 start index.html  # Windows
 ```
 
+### 동작 검증
+
+핵심 게임 루프는 테스트 스크립트로 확인할 수 있습니다.
+
+```bash
+node tests/cafe-clicker.test.js
+```
+
 ## 파일 구조
 
 ```text
 cafe-clicker/
+├── docs/
+│   └── superpowers/
+│       ├── plans/
+│       └── specs/
 ├── index.html    # 게임 전체 (HTML + CSS + JS)
+├── tests/
+│   └── cafe-clicker.test.js
 ├── vercel.json   # Vercel 배포 설정
 └── README.md
 ```
