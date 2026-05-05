@@ -3,29 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>☕ 카페 클리커</title>
+  <title>카페 클리커</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg: #faf7f2;
       --surface: #ffffff;
+      --surface-soft: #f3ebe2;
       --border: rgba(120, 90, 60, 0.15);
       --border-strong: rgba(120, 90, 60, 0.3);
       --text: #2c1f0e;
       --text-soft: #7a6352;
       --text-muted: #b0a090;
       --accent: #a0522d;
+      --accent-soft: #d8b799;
       --green-bg: #e8f5e9;
       --green-text: #2e7d32;
       --info-bg: #e3f2fd;
       --info-text: #1565c0;
+      --shadow: 0 18px 40px rgba(120, 90, 60, 0.08);
     }
 
     body {
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top, rgba(255, 244, 227, 0.8), transparent 45%),
+        linear-gradient(180deg, #fdfaf6 0%, #f7f1e7 100%);
       color: var(--text);
       display: flex;
       flex-direction: column;
@@ -35,11 +40,12 @@
     header {
       width: 100%;
       padding: 16px 24px;
-      background: var(--surface);
+      background: rgba(255, 255, 255, 0.92);
       border-bottom: 0.5px solid var(--border-strong);
       display: flex;
       align-items: center;
       gap: 10px;
+      backdrop-filter: blur(14px);
     }
 
     header span {
@@ -48,14 +54,15 @@
 
     header h1 {
       font-size: 18px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--accent);
+      letter-spacing: 0.02em;
     }
 
     main {
       width: 100%;
-      max-width: 720px;
-      padding: 24px 16px;
+      max-width: 760px;
+      padding: 28px 16px 40px;
       display: flex;
       gap: 20px;
     }
@@ -76,28 +83,31 @@
     }
 
     .stat-card {
-      background: var(--surface);
+      background: rgba(255, 255, 255, 0.88);
       border: 0.5px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 8px;
+      border-radius: 14px;
+      padding: 11px 8px;
       text-align: center;
+      box-shadow: 0 12px 24px rgba(120, 90, 60, 0.05);
     }
 
     .stat-card .label {
       font-size: 11px;
       color: var(--text-soft);
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
 
     .stat-card .value {
       font-size: 16px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text);
     }
 
     .milestone {
       font-size: 13px;
-      color: var(--text-soft);
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.01em;
     }
 
     .btn-wrap {
@@ -111,13 +121,14 @@
       height: 170px;
       border-radius: 50%;
       border: 0.5px solid var(--border-strong);
-      background: var(--surface);
+      background:
+        radial-gradient(circle at 30% 30%, #fffaf4 0%, #f6eadf 45%, #e7d3c0 100%);
       font-size: 72px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 12px rgba(120, 90, 60, 0.08);
+      box-shadow: 0 16px 32px rgba(120, 90, 60, 0.15);
       transition: transform 0.08s, box-shadow 0.08s;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
@@ -125,23 +136,57 @@
     }
 
     #brew-btn:active {
-      transform: scale(0.91);
-      box-shadow: none;
+      transform: scale(0.92);
+      box-shadow: 0 8px 16px rgba(120, 90, 60, 0.12);
+    }
+
+    #brew-btn.scale-up {
+      animation: scale-up 0.36s ease;
+    }
+
+    #brew-btn.pulse {
+      animation: pulse 0.36s ease;
     }
 
     .particle {
       position: absolute;
-      font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--accent);
       pointer-events: none;
       white-space: nowrap;
       animation: float-up 0.85s ease-out forwards;
+      text-shadow: 0 4px 14px rgba(255, 255, 255, 0.65);
     }
 
-    @keyframes float-up {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-56px); opacity: 0; }
+    .particle.burst {
+      color: var(--text);
+      animation-duration: 1s;
+    }
+
+    .coffee-card,
+    .cafe-story {
+      width: 100%;
+      max-width: 360px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 0.5px solid var(--border);
+      box-shadow: 0 10px 24px rgba(120, 90, 60, 0.05);
+      text-align: center;
+    }
+
+    .coffee-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .coffee-desc,
+    .cafe-story {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-soft);
     }
 
     .cpc-label {
@@ -153,26 +198,29 @@
       background: var(--green-bg);
       color: var(--green-text);
       border: 0.5px solid rgba(46, 125, 50, 0.25);
-      padding: 7px 16px;
-      border-radius: 8px;
+      padding: 8px 14px;
+      border-radius: 10px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
+      text-align: center;
+      max-width: 360px;
+      box-shadow: 0 12px 20px rgba(46, 125, 50, 0.08);
     }
 
     .toast-placeholder {
-      height: 30px;
+      height: 36px;
     }
 
     .right {
-      width: 210px;
+      width: 230px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
 
     .shop-title {
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text-soft);
       margin-bottom: 4px;
       padding-left: 2px;
@@ -180,30 +228,31 @@
 
     .upg-btn {
       width: 100%;
-      padding: 9px 10px;
-      background: var(--surface);
+      padding: 10px 11px;
+      background: rgba(255, 255, 255, 0.92);
       border: 0.5px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
       text-align: left;
-      transition: border-color 0.12s, opacity 0.12s;
+      transition: border-color 0.12s, transform 0.12s, opacity 0.12s;
       outline: none;
     }
 
     .upg-btn:hover:not(:disabled) {
       border-color: var(--border-strong);
+      transform: translateY(-1px);
     }
 
     .upg-btn:disabled {
-      opacity: 0.42;
+      opacity: 0.44;
       cursor: default;
     }
 
     .upg-icon {
-      font-size: 18px;
+      font-size: 20px;
       flex-shrink: 0;
     }
 
@@ -217,15 +266,16 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
     .upg-row1 {
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
 
     .upg-name {
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text);
     }
 
@@ -245,7 +295,7 @@
 
     .upg-cost {
       font-size: 10px;
-      font-weight: 500;
+      font-weight: 700;
       color: var(--text);
     }
 
@@ -253,7 +303,143 @@
       color: var(--text-muted);
     }
 
-    @media (max-width: 520px) {
+    .ending-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(44, 31, 14, 0.44);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .ending-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ending-panel {
+      width: min(100%, 520px);
+      background: rgba(255, 255, 255, 0.95);
+      border: 0.5px solid var(--border-strong);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 22px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .ending-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ending-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .ending-subtitle {
+      font-size: 13px;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    .close-ending {
+      border: none;
+      background: var(--surface-soft);
+      color: var(--text);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .ending-block {
+      background: var(--surface-soft);
+      border-radius: 16px;
+      padding: 14px 15px;
+      border: 0.5px solid var(--border);
+    }
+
+    .ending-block h2 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-soft);
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    .route-list,
+    .ending-stats {
+      display: grid;
+      gap: 8px;
+    }
+
+    .route-line,
+    .ending-stat {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .ending-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .ending-actions button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .restart-btn {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .continue-btn {
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-60px) scale(1.08); opacity: 0; }
+    }
+
+    @keyframes scale-up {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 16px 32px rgba(120, 90, 60, 0.15); }
+      50% { transform: scale(1.03); box-shadow: 0 18px 34px rgba(160, 82, 45, 0.2); }
+      100% { transform: scale(1); box-shadow: 0 16px 32px rgba(120, 90, 60, 0.15); }
+    }
+
+    @media (max-width: 560px) {
+      header {
+        padding: 14px 16px;
+      }
+
       main {
         flex-direction: column;
         align-items: center;
@@ -262,23 +448,36 @@
       .right {
         width: 100%;
       }
+
+      .ending-actions {
+        flex-direction: column-reverse;
+      }
+
+      .ending-actions button {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <header>
     <span>☕</span>
-    <h1>카페 클리커</h1>
+    <h1>CafeClick</h1>
   </header>
 
   <main>
     <div class="left">
       <div class="stats-row" id="stats"></div>
-      <div class="milestone" id="milestone">☕ 작은 카페</div>
+      <div class="milestone" id="milestone">작은 카페</div>
       <div class="btn-wrap" id="btn-wrap">
-        <button id="brew-btn">☕</button>
+        <button id="brew-btn" aria-label="커피 내리기">☕</button>
+      </div>
+      <div class="coffee-card">
+        <div class="coffee-name" id="coffee-name">맥심 모카골드</div>
+        <div class="coffee-desc" id="coffee-desc">종이컵에 뜨거운 물만 부었다</div>
       </div>
       <div class="cpc-label" id="cpc-label">클릭당 1원</div>
+      <div class="cafe-story" id="cafe-story">🪑 낡은 플라스틱 의자 2개. 메뉴판은 손으로 썼다.</div>
       <div id="toast-area"><div class="toast-placeholder"></div></div>
     </div>
 
@@ -288,40 +487,100 @@
     </div>
   </main>
 
+  <div class="ending-overlay" id="ending-overlay">
+    <div class="ending-panel">
+      <div class="ending-head">
+        <div>
+          <div class="ending-title" id="ending-title">🌍 글로벌 브랜드 달성!</div>
+          <div class="ending-subtitle">맥심 모카골드에서 블랙 아이보리까지, 이제 당신의 카페는 세계 어디서나 통하는 이름이 되었다.</div>
+        </div>
+        <button class="close-ending continue-btn" id="close-ending">닫기</button>
+      </div>
+      <div class="ending-block">
+        <h2>커피 성장 회고</h2>
+        <div class="route-list" id="ending-route"></div>
+      </div>
+      <div class="ending-block">
+        <h2>플레이 통계</h2>
+        <div class="ending-stats" id="ending-stats"></div>
+      </div>
+      <div class="ending-actions">
+        <button class="continue-btn" id="close-ending-2">계속 운영하기</button>
+        <button class="restart-btn" id="restart-btn">다시 시작</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const UPGRADES = [
-      { id: 'beans', name: '좋은 원두', emoji: '🫘', desc: '클릭당 +1', costBase: 15, costMult: 1.6, cpc: 1, cps: 0 },
-      { id: 'machine', name: '에스프레소 머신', emoji: '⚙️', desc: '초당 +2', costBase: 50, costMult: 1.6, cpc: 0, cps: 2 },
-      { id: 'barista', name: '바리스타 고용', emoji: '👩‍🍳', desc: '초당 +10', costBase: 200, costMult: 1.6, cpc: 0, cps: 10 },
-      { id: 'deco', name: '인테리어 개선', emoji: '🪴', desc: '클릭당 +5', costBase: 400, costMult: 1.6, cpc: 5, cps: 0 },
-      { id: 'delivery', name: '배달 서비스', emoji: '🛵', desc: '초당 +25', costBase: 1000, costMult: 1.6, cpc: 0, cps: 25 },
-      { id: 'branch', name: '2호점 오픈', emoji: '🏪', desc: '초당 +100', costBase: 5000, costMult: 1.6, cpc: 0, cps: 100 },
-      { id: 'franchise', name: '프랜차이즈', emoji: '🏢', desc: '초당 +500', costBase: 25000, costMult: 1.6, cpc: 0, cps: 500 },
-      { id: 'app', name: '앱 출시', emoji: '📱', desc: '클릭당 +50', costBase: 10000, costMult: 1.6, cpc: 50, cps: 0 }
+    const SAVE_KEY = 'cafeClickSave';
+
+    const COFFEES = [
+      { unlockAt: 0, name: '맥심 모카골드', desc: '종이컵에 뜨거운 물만 부었다', emoji: '☕' },
+      { unlockAt: 50, name: '캔커피 (레쓰비)', desc: '자판기에서 뽑았다. 따뜻하다.', emoji: '🥤' },
+      { unlockAt: 200, name: '아메리카노', desc: '편의점 원두커피. 그래도 원두다.', emoji: '☕' },
+      { unlockAt: 600, name: '에스프레소', desc: '진하다. 쓰다. 눈이 떠진다.', emoji: '☕' },
+      { unlockAt: 1500, name: '카페라떼', desc: '우유가 들어갔다. 부드럽다.', emoji: '🍶' },
+      { unlockAt: 4000, name: '카푸치노', desc: '거품이 올라갔다. 폼아트 입문.', emoji: '☁️' },
+      { unlockAt: 10000, name: '플랫화이트', desc: '호주식. 진한데 부드럽다.', emoji: '🤍' },
+      { unlockAt: 25000, name: '콜드브루', desc: '12시간 냉침. 깊은 맛.', emoji: '🧊' },
+      { unlockAt: 60000, name: '에티오피아 예가체프', desc: '싱글오리진. 원산지가 보인다.', emoji: '🌿' },
+      { unlockAt: 120000, name: '코피루왁', desc: '사향고양이가... 뭐 맛은 좋다.', emoji: '🐱' },
+      { unlockAt: 300000, name: '블루마운틴', desc: '자메이카산. 병에 담겨 온다.', emoji: '🏔️' },
+      { unlockAt: 700000, name: '파나마 게이샤', desc: '경매에서 낙찰됐다.', emoji: '🌸' },
+      { unlockAt: 1000000, name: '블랙 아이보리', desc: '코끼리가 먹고 소화한 원두. 세계 최고가.', emoji: '🐘' }
     ];
 
     const MILESTONES = [
-      [1000000, '🌍 글로벌 브랜드'],
-      [100000, '🏢 커피 제국'],
-      [10000, '🏪 유명 카페'],
-      [1000, '👩‍🍳 지역 명소'],
-      [100, '🫘 단골이 생겼어'],
-      [0, '☕ 작은 카페']
+      { unlockAt: 0, name: '작은 카페', desc: '🪑 낡은 플라스틱 의자 2개. 메뉴판은 손으로 썼다.' },
+      { unlockAt: 100, name: '단골이 생겼어', desc: '☕ 단골 아저씨가 매일 아메리카노를 마신다.' },
+      { unlockAt: 1000, name: '지역 명소', desc: '📰 동네 신문에 소개됐다. 줄이 생겼다.' },
+      { unlockAt: 10000, name: '유명 카페', desc: '📸 인스타 성지가 됐다. 웨이팅이 30분이다.' },
+      { unlockAt: 100000, name: '커피 제국', desc: '🏆 전국 체인 200호점. 직원이 너무 많아 이름을 모른다.' },
+      { unlockAt: 1000000, name: '글로벌 브랜드', desc: '🌍 뉴욕, 도쿄, 파리에 매장이 있다. 당신은 이제 회장이다.' }
+    ];
+
+    const UPGRADES = [
+      { id: 'beans', name: '좋은 원두', emoji: '🫘', desc: '클릭당 +1', costBase: 15, costMult: 1.6, cpc: 1, cps: 0, toast: '' },
+      { id: 'machine', name: '에스프레소 머신', emoji: '⚙️', desc: '초당 +2', costBase: 50, costMult: 1.6, cpc: 0, cps: 2, toast: '⚙️ 기계 소리가 카페를 가득 채운다.' },
+      { id: 'barista', name: '바리스타 고용', emoji: '👩‍🍳', desc: '초당 +10', costBase: 200, costMult: 1.6, cpc: 0, cps: 10, toast: '👩‍🍳 바리스타 이름은 지수다. 라떼 아트를 잘 한다.' },
+      { id: 'deco', name: '인테리어 개선', emoji: '🪑', desc: '클릭당 +5', costBase: 400, costMult: 1.6, cpc: 5, cps: 0, toast: '' },
+      { id: 'delivery', name: '배달 서비스', emoji: '🛵', desc: '초당 +25', costBase: 1000, costMult: 1.6, cpc: 0, cps: 25, toast: '🛵 비가 와도 배달한다. 고객이 좋아한다.' },
+      { id: 'branch', name: '2호점 오픈', emoji: '🏪', desc: '초당 +100', costBase: 5000, costMult: 1.6, cpc: 0, cps: 100, toast: '🏪 강남에 2호점을 냈다. 임대료가 무섭다.' },
+      { id: 'franchise', name: '프랜차이즈', emoji: '🏢', desc: '초당 +500', costBase: 25000, costMult: 1.6, cpc: 0, cps: 500, toast: '🏢 가맹점주 교육을 시작했다. 이제 사업가다.' },
+      { id: 'app', name: '앱 출시', emoji: '📱', desc: '클릭당 +50', costBase: 10000, costMult: 1.6, cpc: 50, cps: 0, toast: '📱 앱 리뷰가 4.8점이다. 별점 테러도 있다.' }
     ];
 
     const statsEl = document.getElementById('stats');
     const milestoneEl = document.getElementById('milestone');
     const buttonWrapEl = document.getElementById('btn-wrap');
     const brewButtonEl = document.getElementById('brew-btn');
+    const coffeeNameEl = document.getElementById('coffee-name');
+    const coffeeDescEl = document.getElementById('coffee-desc');
     const cpcLabelEl = document.getElementById('cpc-label');
+    const cafeStoryEl = document.getElementById('cafe-story');
     const toastAreaEl = document.getElementById('toast-area');
     const shopEl = document.getElementById('shop');
+    const endingOverlayEl = document.getElementById('ending-overlay');
+    const endingTitleEl = document.getElementById('ending-title');
+    const endingRouteEl = document.getElementById('ending-route');
+    const endingStatsEl = document.getElementById('ending-stats');
+    const closeEndingEl = document.getElementById('close-ending');
+    const continueEndingEl = document.getElementById('close-ending-2');
+    const restartButtonEl = document.getElementById('restart-btn');
+
+    endingOverlayEl.className = 'ending-overlay';
 
     let coins = 0;
     let total = 0;
     let cups = 0;
     let owned = {};
     let toastTimer = null;
+    let clickCount = 0;
+    let highestCPS = 0;
+    let endingShown = false;
+    let lastCoffeeUnlockAt = 0;
+    let sessionStartedAt = Date.now();
+    let skipNextSave = false;
 
     function getCost(upgrade) {
       return Math.floor(upgrade.costBase * Math.pow(upgrade.costMult, owned[upgrade.id] || 0));
@@ -336,18 +595,150 @@
     }
 
     function formatNumber(value) {
-      const amount = Math.floor(value);
-      if (amount >= 1000000) {
-        return `${(amount / 1000000).toFixed(1)}M`;
-      }
-      if (amount >= 1000) {
-        return `${(amount / 1000).toFixed(1)}K`;
-      }
-      return String(amount);
+      return Math.floor(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    function getMilestone() {
-      return MILESTONES.find(([threshold]) => total >= threshold)[1];
+    function formatDuration(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      if (minutes > 0) {
+        return `${minutes}분 ${seconds}초`;
+      }
+      return `${seconds}초`;
+    }
+
+    function getCurrentCoffee() {
+      let current = COFFEES[0];
+      for (let index = 0; index < COFFEES.length; index += 1) {
+        if (total >= COFFEES[index].unlockAt) {
+          current = COFFEES[index];
+        }
+      }
+      return current;
+    }
+
+    function getCurrentMilestone() {
+      let current = MILESTONES[0];
+      for (let index = 0; index < MILESTONES.length; index += 1) {
+        if (total >= MILESTONES[index].unlockAt) {
+          current = MILESTONES[index];
+        }
+      }
+      return current;
+    }
+
+    function getMostOwnedUpgradeName() {
+      let winner = null;
+      for (let index = 0; index < UPGRADES.length; index += 1) {
+        const upgrade = UPGRADES[index];
+        const count = owned[upgrade.id] || 0;
+        if (!winner || count > winner.count) {
+          winner = { name: upgrade.name, count };
+        }
+      }
+      return winner && winner.count > 0 ? winner.name : '없음';
+    }
+
+    function saveGame() {
+      if (skipNextSave) {
+        skipNextSave = false;
+        return;
+      }
+      if (typeof localStorage === 'undefined') {
+        return;
+      }
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ coins, total, cups, owned }));
+    }
+
+    function loadGame() {
+      if (typeof localStorage === 'undefined') {
+        return;
+      }
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) {
+        return;
+      }
+      try {
+        const saved = JSON.parse(raw);
+        if (typeof saved.coins === 'number') {
+          coins = saved.coins;
+        }
+        if (typeof saved.total === 'number') {
+          total = saved.total;
+        }
+        if (typeof saved.cups === 'number') {
+          cups = saved.cups;
+        }
+        if (saved.owned && typeof saved.owned === 'object') {
+          owned = { ...saved.owned };
+        }
+      } catch (error) {
+        owned = {};
+      }
+    }
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toastAreaEl.innerHTML = `<div class="toast">${message}</div>`;
+      toastTimer = setTimeout(() => {
+        toastAreaEl.innerHTML = '<div class="toast-placeholder"></div>';
+      }, 2200);
+    }
+
+    function animateButton(className) {
+      brewButtonEl.classList.remove(className);
+      void brewButtonEl.offsetWidth;
+      brewButtonEl.classList.add(className);
+      setTimeout(() => {
+        brewButtonEl.classList.remove(className);
+      }, 360);
+    }
+
+    function getParticleSize(amount) {
+      if (amount >= 50) {
+        return 24;
+      }
+      if (amount >= 10) {
+        return 18;
+      }
+      return 14;
+    }
+
+    function createParticleAt(text, left, top, size, burst) {
+      const particle = document.createElement('div');
+      particle.className = burst ? 'particle burst' : 'particle';
+      particle.textContent = text;
+      particle.style.left = `${left}px`;
+      particle.style.top = `${top}px`;
+      particle.style.fontSize = `${size}px`;
+      buttonWrapEl.appendChild(particle);
+      setTimeout(() => {
+        particle.remove();
+      }, burst ? 1000 : 850);
+    }
+
+    function createValueParticle(amount, event) {
+      const bounds = buttonWrapEl.getBoundingClientRect();
+      const left = event.clientX - bounds.left - 16;
+      const top = event.clientY - bounds.top - 8;
+      createParticleAt(`+${amount}`, left, top, getParticleSize(amount), false);
+    }
+
+    function createCoffeeBurst() {
+      const coffee = getCurrentCoffee();
+      const cycle = Math.floor(clickCount / 100);
+      const count = 3 + ((cycle - 1) % 3);
+      const offsets = [
+        { left: 56, top: 74 },
+        { left: 76, top: 46 },
+        { left: 96, top: 74 },
+        { left: 64, top: 102 },
+        { left: 92, top: 104 }
+      ];
+      for (let index = 0; index < count; index += 1) {
+        createParticleAt(coffee.emoji, offsets[index].left, offsets[index].top, 22, true);
+      }
     }
 
     function renderStats() {
@@ -363,6 +754,19 @@
           <div class="value">${value}</div>
         </div>
       `).join('');
+    }
+
+    function renderCoffee() {
+      const coffee = getCurrentCoffee();
+      brewButtonEl.textContent = coffee.emoji;
+      coffeeNameEl.textContent = coffee.name;
+      coffeeDescEl.textContent = coffee.desc;
+    }
+
+    function renderMilestone() {
+      const milestone = getCurrentMilestone();
+      milestoneEl.textContent = milestone.name;
+      cafeStoryEl.textContent = milestone.desc;
     }
 
     function renderShop() {
@@ -398,37 +802,76 @@
           coins -= cost;
           owned[upgrade.id] = (owned[upgrade.id] || 0) + 1;
           if (firstPurchase) {
-            showToast(`${upgrade.emoji} ${upgrade.name} 구매!`);
+            const extra = upgrade.toast ? ` ${upgrade.toast}` : '';
+            showToast(`${upgrade.emoji} ${upgrade.name} 구매!${extra}`);
           }
           refreshAll();
         });
       });
     }
 
-    function refreshAll() {
-      renderStats();
-      renderShop();
-      milestoneEl.textContent = getMilestone();
-      cpcLabelEl.textContent = `클릭당 ${getCPC()}원`;
+    function renderEnding() {
+      endingTitleEl.textContent = '🌍 글로벌 브랜드 달성!';
+      endingRouteEl.innerHTML = COFFEES.map((coffee, index) => `
+        <div class="route-line">${index + 1}. ${coffee.emoji} ${coffee.name} - ${coffee.desc}</div>
+      `).join('');
+      endingStatsEl.innerHTML = `
+        <div class="ending-stat">총 플레이 시간: ${formatDuration(Date.now() - sessionStartedAt)}</div>
+        <div class="ending-stat">총 판매한 커피: ${formatNumber(cups)}잔</div>
+        <div class="ending-stat">가장 많이 구매한 업그레이드: ${getMostOwnedUpgradeName()}</div>
+        <div class="ending-stat">최고 초당 수입: ${formatNumber(highestCPS)}원/초</div>
+      `;
     }
 
-    function showToast(message) {
+    function openEnding() {
+      renderEnding();
+      endingOverlayEl.className = 'ending-overlay';
+      endingOverlayEl.classList.add('open');
+    }
+
+    function closeEnding() {
+      endingOverlayEl.className = 'ending-overlay';
+    }
+
+    function resetGame() {
       clearTimeout(toastTimer);
-      toastAreaEl.innerHTML = `<div class="toast">${message}</div>`;
-      toastTimer = setTimeout(() => {
-        toastAreaEl.innerHTML = '<div class="toast-placeholder"></div>';
-      }, 2200);
+      coins = 0;
+      total = 0;
+      cups = 0;
+      owned = {};
+      clickCount = 0;
+      highestCPS = 0;
+      endingShown = false;
+      lastCoffeeUnlockAt = COFFEES[0].unlockAt;
+      sessionStartedAt = Date.now();
+      skipNextSave = true;
+      closeEnding();
+      toastAreaEl.innerHTML = '<div class="toast-placeholder"></div>';
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(SAVE_KEY);
+      }
+      refreshAll();
     }
 
-    function createParticle(amount, event) {
-      const bounds = buttonWrapEl.getBoundingClientRect();
-      const particle = document.createElement('div');
-      particle.className = 'particle';
-      particle.textContent = `+${amount}`;
-      particle.style.left = `${event.clientX - bounds.left - 16}px`;
-      particle.style.top = `${event.clientY - bounds.top - 8}px`;
-      buttonWrapEl.appendChild(particle);
-      setTimeout(() => particle.remove(), 850);
+    function refreshAll() {
+      const currentCoffee = getCurrentCoffee();
+      highestCPS = Math.max(highestCPS, getCPS());
+      renderStats();
+      renderCoffee();
+      renderMilestone();
+      renderShop();
+      renderEnding();
+      cpcLabelEl.textContent = `클릭당 ${formatNumber(getCPC())}원`;
+      if (currentCoffee.unlockAt > lastCoffeeUnlockAt) {
+        animateButton('scale-up');
+        showToast(`${currentCoffee.emoji} 새로운 커피 해금! ${currentCoffee.name}`);
+      }
+      lastCoffeeUnlockAt = currentCoffee.unlockAt;
+      if (total >= 1000000 && !endingShown) {
+        endingShown = true;
+        openEnding();
+      }
+      saveGame();
     }
 
     brewButtonEl.addEventListener('click', (event) => {
@@ -436,9 +879,17 @@
       coins += amount;
       total += amount;
       cups += 1;
-      createParticle(amount, event);
+      clickCount += 1;
+      createValueParticle(amount, event);
+      if (clickCount % 100 === 0) {
+        createCoffeeBurst();
+      }
       refreshAll();
     });
+
+    closeEndingEl.addEventListener('click', closeEnding);
+    continueEndingEl.addEventListener('click', closeEnding);
+    restartButtonEl.addEventListener('click', resetGame);
 
     setInterval(() => {
       const cps = getCPS();
@@ -447,9 +898,13 @@
       }
       coins += cps / 10;
       total += cps / 10;
+      animateButton('pulse');
       refreshAll();
     }, 100);
 
+    loadGame();
+    highestCPS = getCPS();
+    lastCoffeeUnlockAt = getCurrentCoffee().unlockAt;
     refreshAll();
   </script>
 </body>
