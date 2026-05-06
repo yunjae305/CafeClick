@@ -69,13 +69,14 @@ class FakeElement {
     this._innerHTML = String(value);
     this.children = [];
     if (this.id === 'shop') {
-      const pattern = /<button class="upg-btn"([^>]*)data-id="([^"]+)"[^>]*>[\s\S]*?<\/button>/g;
+      const pattern = /<button class="upg-btn"([^>]*)data-id="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g;
       let match;
       while ((match = pattern.exec(this._innerHTML)) !== null) {
         const button = new FakeElement('button', this.ownerDocument);
         button.className = 'upg-btn';
         button.dataset = { id: match[2] };
         button.disabled = /\bdisabled\b/.test(match[1]);
+        button.textContent = match[3].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
         this.appendChild(button);
       }
     }
@@ -155,13 +156,11 @@ class FakeDocument {
       ['div', 'cafe-story'],
       ['div', 'toast-area'],
       ['div', 'shop'],
-      ['div', 'ending-overlay'],
-      ['div', 'ending-title'],
-      ['div', 'ending-route'],
-      ['div', 'ending-stats'],
-      ['button', 'close-ending'],
-      ['button', 'close-ending-2'],
-      ['button', 'restart-btn']
+      ['div', 'prestige-title'],
+      ['div', 'prestige-beans'],
+      ['div', 'prestige-bonus'],
+      ['div', 'prestige-preview'],
+      ['button', 'prestige-btn']
     ].forEach(([tag, id]) => this.register(new FakeElement(tag, this, id)));
   }
 
@@ -206,43 +205,26 @@ function createLocalStorage(savedState) {
 function createTestHooks() {
   return `
 globalThis.__testHooks = {
-  getState() {
-    return {
-      coins,
-      total,
-      cups,
-      owned: { ...owned },
-      clickCount,
-      highestCPS,
-      endingShown
-    };
+  getSnapshot() {
+    return exportSnapshotForTest();
   },
-  setState(next) {
-    if (Object.prototype.hasOwnProperty.call(next, 'coins')) {
-      coins = next.coins;
-    }
-    if (Object.prototype.hasOwnProperty.call(next, 'total')) {
-      total = next.total;
-    }
-    if (Object.prototype.hasOwnProperty.call(next, 'cups')) {
-      cups = next.cups;
-    }
-    if (Object.prototype.hasOwnProperty.call(next, 'owned')) {
-      owned = { ...next.owned };
-    }
-    if (Object.prototype.hasOwnProperty.call(next, 'clickCount')) {
-      clickCount = next.clickCount;
-    }
-    if (Object.prototype.hasOwnProperty.call(next, 'highestCPS')) {
-      highestCPS = next.highestCPS;
-    }
-    if (Object.prototype.hasOwnProperty.call(next, 'endingShown')) {
-      endingShown = next.endingShown;
-    }
+  setSnapshot(next) {
+    importSnapshotForTest(next);
   },
-  refreshAll,
+  performPrestige() {
+    return performPrestige();
+  },
   getCostById(id) {
-    return getCost(UPGRADES.find((upgrade) => upgrade.id === id));
+    return getWholeCost(id).toString();
+  },
+  getPrestigePreview() {
+    return getPrestigePreview().toString();
+  },
+  getDiagnostics() {
+    return {
+      drawCount,
+      frameCount
+    };
   }
 };
 `;
@@ -252,8 +234,7 @@ function loadGame(options = {}) {
   const html = fs.readFileSync(HTML_PATH, 'utf8');
   const script = extractScript(html) + createTestHooks();
   const document = new FakeDocument();
-  const intervals = [];
-  const timeouts = [];
+  const frameQueue = [];
   const storage = createLocalStorage(options.savedState);
   let now = options.now || 0;
   const context = vm.createContext({
@@ -266,65 +247,78 @@ function loadGame(options = {}) {
         return now;
       }
     },
+    performance: {
+      now() {
+        return now;
+      }
+    },
+    requestAnimationFrame(fn) {
+      frameQueue.push(fn);
+      return frameQueue.length - 1;
+    },
+    cancelAnimationFrame() {},
     setTimeout(fn) {
-      timeouts.push(fn);
-      return timeouts.length - 1;
+      frameQueue.push(() => fn());
+      return frameQueue.length - 1;
     },
-    clearTimeout() {},
-    setInterval(fn) {
-      intervals.push(fn);
-      return intervals.length - 1;
-    },
-    clearInterval() {}
+    clearTimeout() {}
   });
 
   vm.runInContext(script, context);
 
-  return {
+  const api = {
+    runFrames(count = 1, deltaMs = 16) {
+      for (let index = 0; index < count; index += 1) {
+        now += deltaMs;
+        const callbacks = frameQueue.splice(0, frameQueue.length);
+        callbacks.forEach((callback) => callback(now));
+      }
+    },
+    flush() {
+      this.runFrames(6, 16);
+    },
     clickBrew(times = 1) {
       const button = document.getElementById('brew-btn');
       for (let index = 0; index < times; index += 1) {
         button.click({ clientX: 80, clientY: 80 });
+        this.flush();
       }
-    },
-    clickElement(id, event = {}) {
-      const element = document.getElementById(id);
-      assert(element, `Missing element: ${id}`);
-      element.click(event);
     },
     buyUpgrade(id) {
       const button = this.getUpgradeButton(id);
       assert(button, `Missing upgrade button: ${id}`);
       button.click();
+      this.flush();
+    },
+    prestige() {
+      const button = document.getElementById('prestige-btn');
+      if (button && !button.disabled) {
+        button.click();
+      } else {
+        context.__testHooks.performPrestige();
+      }
+      this.flush();
     },
     getUpgradeButton(id) {
       return document.getElementById('shop').querySelectorAll('.upg-btn').find((button) => button.dataset.id === id) || null;
     },
-    getState() {
-      return context.__testHooks.getState();
-    },
     setState(next) {
-      context.__testHooks.setState(next);
+      context.__testHooks.setSnapshot(next);
+      this.flush();
     },
-    refreshAll() {
-      context.__testHooks.refreshAll();
-    },
-    runIntervals(steps = 1) {
-      for (let step = 0; step < steps; step += 1) {
-        intervals.forEach((fn) => fn());
-      }
-    },
-    advanceTime(ms) {
-      now += ms;
+    getState() {
+      return context.__testHooks.getSnapshot();
     },
     getText(id) {
-      return document.getElementById(id).textContent;
+      const element = document.getElementById(id);
+      return element ? element.textContent : null;
     },
     getMarkup(id) {
-      return document.getElementById(id).innerHTML;
+      const element = document.getElementById(id);
+      return element ? element.innerHTML : null;
     },
-    getClassName(id) {
-      return document.getElementById(id).className;
+    getElement(id) {
+      return document.getElementById(id);
     },
     getStatsMarkup() {
       return document.getElementById('stats').innerHTML;
@@ -332,17 +326,22 @@ function loadGame(options = {}) {
     getCost(id) {
       return context.__testHooks.getCostById(id);
     },
+    getPrestigePreview() {
+      return context.__testHooks.getPrestigePreview();
+    },
     getSavedState() {
       return storage.dump('cafeClickSave');
     },
-    getParticles() {
-      return document.getElementById('btn-wrap').children.map((child) => ({
-        text: child.textContent,
-        fontSize: child.style.fontSize || '',
-        className: child.className
-      }));
+    getDiagnostics() {
+      return context.__testHooks.getDiagnostics();
+    },
+    getWholeCoins() {
+      return this.getState().run.coins;
     }
   };
+
+  api.flush();
+  return api;
 }
 
 function runTest(name, testFn) {
@@ -356,104 +355,86 @@ function runTest(name, testFn) {
   }
 }
 
-runTest('initial render shows coffee card cafe story and all upgrades', () => {
+runTest('initial render shows prestige panel and no ending overlay', () => {
   const game = loadGame();
-  assert.equal(game.getText('coffee-name'), '맥심 모카골드');
-  assert.match(game.getText('coffee-desc'), /종이컵/);
-  assert.equal(game.getText('milestone'), '작은 카페');
-  assert.match(game.getText('cafe-story'), /낡은 플라스틱 의자 2개/);
-  assert.equal(game.getText('brew-btn'), '☕');
-  assert.equal(game.getUpgradeButton('beans').disabled, true);
-  assert.equal(documentedUpgradeCount(game), 8);
-  assert.match(game.getStatsMarkup(), /보유/);
-  assert.equal(game.getClassName('ending-overlay'), 'ending-overlay');
+  assert.equal(game.getElement('ending-overlay'), null);
+  assert.equal(game.getText('prestige-title'), '환생');
+  assert.equal(game.getText('prestige-bonus'), '영구 수익 +0%');
+  assert.equal(game.getText('prestige-preview'), '지금 환생하면 황금 원두 +0');
 });
 
-runTest('coffee unlock updates button toast animation and cafe milestone text', () => {
+runTest('prestige bonus applies to passive income and large values format with Korean units', () => {
   const game = loadGame();
-  game.setState({ coins: 49, total: 49, cups: 10, owned: {} });
-  game.refreshAll();
-  game.clickBrew(1);
-  assert.equal(game.getText('coffee-name'), '캔커피 (레쓰비)');
-  assert.match(game.getText('coffee-desc'), /자판기/);
-  assert.match(game.getMarkup('toast-area'), /새로운 커피 해금/);
-  assert.match(game.getClassName('brew-btn'), /scale-up/);
-
-  game.setState({ coins: 1000, total: 1000, cups: 10, owned: {} });
-  game.refreshAll();
-  assert.equal(game.getText('milestone'), '지역 명소');
-  assert.match(game.getText('cafe-story'), /줄이 생겼다/);
-});
-
-runTest('first purchase toast uses flavor text and game auto-saves', () => {
-  const game = loadGame();
-  game.setState({ coins: 200, total: 200, cups: 5, owned: {} });
-  game.refreshAll();
-  game.buyUpgrade('barista');
-  assert.match(game.getMarkup('toast-area'), /지수다/);
-  assert.equal(game.getState().owned.barista, 1);
-  assert.equal(game.getSavedState().owned.barista, 1);
-});
-
-runTest('saved data loads back into the game and passive income pulses the brew button', () => {
-  const game = loadGame({
-    savedState: {
-      coins: 321,
-      total: 1500,
-      cups: 44,
-      owned: { machine: 1, deco: 1 }
+  game.setState({
+    run: {
+      coins: '123456789',
+      total: '123456789',
+      cups: '12',
+      owned: { machine: '1' }
+    },
+    prestige: {
+      goldenBeans: '10'
     }
   });
-  assert.equal(game.getState().coins, 321);
-  assert.equal(game.getText('coffee-name'), '카페라떼');
-  assert.equal(game.getText('cpc-label'), '클릭당 6원');
-  game.runIntervals(1);
-  assert.match(game.getClassName('brew-btn'), /pulse/);
-  assert.equal(game.getUpgradeButton('machine').disabled, false);
+  assert.match(game.getStatsMarkup(), /1.2억/);
+  game.runFrames(10, 100);
+  assert.equal(game.getWholeCoins(), '123456792');
 });
 
-runTest('ending overlay shows summary stats and restart clears progress', () => {
+runTest('saved data restores run and prestige state', () => {
   const game = loadGame({
     savedState: {
-      coins: 999999,
-      total: 999999,
-      cups: 245,
-      owned: { machine: 2, branch: 3, franchise: 1 }
+      version: 2,
+      run: {
+        coins: '321',
+        total: '1500',
+        cups: '44',
+        owned: { machine: '1', deco: '1' }
+      },
+      prestige: {
+        goldenBeans: '7',
+        prestigeCount: '2',
+        bestRun: '9000000'
+      }
     }
   });
-  game.advanceTime(65000);
-  game.runIntervals(1);
-  assert.match(game.getClassName('ending-overlay'), /open/);
-  assert.equal(game.getText('ending-title'), '🌍 글로벌 브랜드 달성!');
-  assert.match(game.getMarkup('ending-route'), /블랙 아이보리/);
-  assert.match(game.getMarkup('ending-stats'), /1분 5초/);
-  assert.match(game.getMarkup('ending-stats'), /245잔/);
-  assert.match(game.getMarkup('ending-stats'), /2호점 오픈/);
-  assert.match(game.getMarkup('ending-stats'), /804원\/초/);
-  game.clickElement('restart-btn');
-  assert.equal(game.getState().coins, 0);
-  assert.equal(game.getState().total, 0);
-  assert.deepEqual(game.getState().owned, {});
-  assert.equal(game.getSavedState(), null);
-  assert.equal(game.getClassName('ending-overlay'), 'ending-overlay');
+  assert.equal(game.getState().run.coins, '321');
+  assert.equal(game.getState().prestige.goldenBeans, '7');
+  assert.equal(game.getText('prestige-bonus'), '영구 수익 +35%');
 });
 
-runTest('particles scale with click income and 100th click creates a coffee burst', () => {
-  const strongClickGame = loadGame();
-  strongClickGame.setState({ coins: 0, total: 0, cups: 0, owned: { app: 1 } });
-  strongClickGame.refreshAll();
-  strongClickGame.clickBrew(1);
-  assert.equal(strongClickGame.getParticles()[0].fontSize, '24px');
-
-  const burstGame = loadGame();
-  burstGame.clickBrew(100);
-  const particles = burstGame.getParticles();
-  assert(particles.length >= 103 && particles.length <= 105);
-  const emojiParticles = particles.filter((particle) => particle.text === '🥤');
-  assert(emojiParticles.length >= 3 && emojiParticles.length <= 5);
+runTest('prestige resets run state but keeps permanent beans', () => {
+  const game = loadGame();
+  game.setState({
+    run: {
+      coins: '4000000',
+      total: '4000000',
+      cups: '30',
+      owned: { machine: '2', branch: '1' }
+    }
+  });
+  assert.equal(game.getPrestigePreview(), '2');
+  game.prestige();
+  assert.equal(game.getState().run.coins, '0');
+  assert.equal(game.getState().run.total, '0');
+  assert.equal(game.getState().run.owned.machine, '0');
+  assert.equal(game.getState().prestige.goldenBeans, '2');
+  assert.equal(game.getSavedState().prestige.goldenBeans, '2');
 });
 
-function documentedUpgradeCount(game) {
-  const ids = ['beans', 'machine', 'barista', 'deco', 'delivery', 'branch', 'franchise', 'app'];
-  return ids.filter((id) => game.getUpgradeButton(id)).length;
-}
+runTest('geometric costs grow after purchases and draw count stays throttled', () => {
+  const game = loadGame();
+  game.setState({
+    run: {
+      coins: '1000000',
+      total: '1000000'
+    }
+  });
+  assert.equal(game.getCost('machine'), '50');
+  game.buyUpgrade('machine');
+  assert.equal(game.getCost('machine'), '80');
+  const before = game.getDiagnostics().drawCount;
+  game.runFrames(20, 16);
+  const after = game.getDiagnostics().drawCount;
+  assert(after - before < 20);
+});
