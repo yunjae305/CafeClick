@@ -71,7 +71,3 @@ cafe-clicker/
 ├─ vercel.json
 └─ README.md
 ```
-
-## 라이선스
-
-MIT
