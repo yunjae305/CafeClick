@@ -1,5 +1,16 @@
 # CafeClick
 
+## CafeClick 한눈에 보기
+
+| 항목 | CafeClick |
+| --- | --- |
+| 프로젝트 한 줄 설명 | 레거시 단일 파일 클릭커 게임의 버그를 분석하고, 설계 문서 작성부터 테스트 코드 기반 리팩토링까지 진행한 유지보수 프로젝트 |
+| 배포/실행 링크 | [https://cafeclick.vercel.app/](https://cafeclick.vercel.app/) / `start index.html` |
+| 스크린샷 or GIF | 시작 화면 `docs/screenshots/cafe-start.png`, 성장 화면 `docs/screenshots/cafe-growth.png`, 엔딩 화면 `docs/screenshots/cafe-ending.png` |
+| 기술 스택 및 이유 | HTML, CSS, JavaScript 단일 파일 구조와 Node `vm` 기반 테스트를 사용해 상태 흐름과 렌더링 버그를 직접 추적하고 빠르게 회귀 검증 |
+| 핵심 구조 설명 | `index.html` 단일 파일 게임 루프, `tests/cafe-clicker.test.js` 회귀 테스트, `docs/repair-design.md`와 `docs/repair.md` 문서 축으로 구성 |
+| 트러블슈팅 기록 | 자동 수입 tick이 전체 렌더링 경로를 타지 않아 마일스톤과 상점 UI가 늦게 갱신되던 문제를 `refreshAll()` 통합과 회귀 테스트로 해결 |
+
 배포 링크: [https://cafeclick.vercel.app/](https://cafeclick.vercel.app/)
 
 CafeClick은 단순한 바닐라 JS 클리커 게임이 아니라, 레거시 단일 파일 게임의 버그를 분석하고 설계 문서를 남긴 뒤 테스트 코드 기반으로 리팩토링한 유지보수 프로젝트입니다.
